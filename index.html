@@ -64,8 +64,18 @@
       overflow-x: hidden;
     }
 
+    .app-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    /* タイトルとリストの左右位置を20pxで完全同期 */
     header {
-      padding: 16px 20px;
+      padding: 20px 20px 12px;
       font-size: 22px;
       font-weight: 500;
       background-color: var(--md-sys-color-surface);
@@ -74,31 +84,31 @@
       z-index: 10;
     }
 
-    /* レスポンシブグリッド (Fold開時横2列) */
     main {
       flex: 1;
-      padding: 8px 16px 96px;
+      padding: 8px 20px 24px;
       display: grid;
       grid-template-columns: 1fr;
       gap: 12px;
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
       align-content: start;
     }
 
+    /* 画面幅600px以上(Fold展開時など)は横2列 */
     @media (min-width: 600px) {
+      header {
+        padding: 24px 20px 16px;
+      }
       main {
         grid-template-columns: 1fr 1fr;
         gap: 16px;
       }
     }
 
-    /* M3 カード */
+    /* カードデザイン */
     .card {
       background-color: var(--md-sys-color-surface-container);
       border-radius: 16px;
-      padding: 18px 16px;
+      padding: 16px 14px 16px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -133,7 +143,7 @@
       background: none;
       border: none;
       color: var(--md-sys-color-on-surface-variant);
-      padding: 4px;
+      padding: 6px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -141,7 +151,7 @@
       cursor: pointer;
     }
 
-    /* FAB */
+    /* FAB (右端位置をコンテンツ幅に連動) */
     .fab {
       position: fixed;
       right: 20px;
@@ -165,7 +175,7 @@
       transform: scale(0.92);
     }
 
-    /* キーボード被り防止付き M3 ダイアログ */
+    /* ダイアログ設定 */
     dialog {
       margin: auto;
       border: none;
@@ -237,8 +247,10 @@
 </head>
 <body>
 
-  <header>Discord Shortcuts</header>
-  <main id="channelList"></main>
+  <div class="app-container">
+    <header>Discord Shortcuts</header>
+    <main id="channelList"></main>
+  </div>
 
   <button class="fab" id="openAddDialog">
     <span class="material-symbols-outlined">add</span>
@@ -288,21 +300,17 @@
           </button>
         `;
 
-        // タップで即時遷移
         card.addEventListener('click', (e) => {
           if (e.target.closest('.btn-more')) return;
           window.location.href = ch.url;
         });
 
-        // 三点リーダーで編集
         card.querySelector('.btn-more').addEventListener('click', (e) => {
           e.stopPropagation();
           openDialog(ch);
         });
 
-        // 長押し並び替え (Touch DnD)
         attachDragEvents(card);
-
         listContainer.appendChild(card);
       });
     }
@@ -345,7 +353,6 @@
       }
     });
 
-    // --- 長押しドラッグ並び替えロジック ---
     let dragTarget = null;
     let pressTimer = null;
     let isDragging = false;
@@ -390,7 +397,6 @@
       });
     }
 
-    // --- 高速起動 + バックグラウンド更新 (SW) ---
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {
         reg.onupdatefound = () => {
