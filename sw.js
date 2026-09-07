@@ -1,4 +1,4 @@
-const CACHE_NAME = 'discord-shortcuts-v1';
+const CACHE_NAME = 'discord-shortcuts-v1.1';
 const ASSETS = [
   './',
   './index.html',
