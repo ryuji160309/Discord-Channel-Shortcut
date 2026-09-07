@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discord Shortcuts</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#141218" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FFFBFE" media="(prefers-color-scheme: light)">
+
+  <!-- Google Fonts: Roboto & Material Symbols -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+  <style>
+    :root {
+      /* M3 Light Colors */
+      --md-sys-color-background: #FFFBFE;
+      --md-sys-color-on-background: #1C1B1F;
+      --md-sys-color-surface: #FFFBFE;
+      --md-sys-color-surface-variant: #E7E0EC;
+      --md-sys-color-on-surface-variant: #49454F;
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+      --md-sys-color-outline: #79747E;
+      --md-sys-color-error: #B3261E;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        /* M3 Dark Colors (自動追従) */
+        --md-sys-color-background: #141218;
+        --md-sys-color-on-background: #E6E0E9;
+        --md-sys-color-surface: #141218;
+        --md-sys-color-surface-variant: #49454F;
+        --md-sys-color-on-surface-variant: #CAC4D0;
+        --md-sys-color-primary: #D0BCFF;
+        --md-sys-color-on-primary: #381E72;
+        --md-sys-color-primary-container: #4F378B;
+        --md-sys-color-on-primary-container: #EADDFF;
+        --md-sys-color-outline: #938F99;
+        --md-sys-color-error: #F2B8B5;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-background);
+      font-family: 'Roboto', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 16px 20px;
+      font-size: 22px;
+      font-weight: 500;
+      background-color: var(--md-sys-color-surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    main {
+      flex: 1;
+      padding: 8px 16px 88px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .card {
+      background-color: var(--md-sys-color-surface-variant);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.1s ease, filter 0.1s ease;
+    }
+
+    .card:active {
+      filter: brightness(0.92);
+      transform: scale(0.99);
+    }
+
+    .card-info {
+      flex: 1;
+      overflow: hidden;
+      padding-right: 12px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-background);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-url {
+      font-size: 12px;
+      color: var(--md-sys-color-outline);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      color: var(--md-sys-color-on-surface-variant);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Floating Action Button (FAB) */
+    .fab {
+      position: fixed;
+      right: 16px;
+      bottom: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: transform 0.1s ease;
+    }
+
+    .fab:active {
+      transform: scale(0.92);
+    }
+
+    /* Dialog (Modal) */
+    dialog {
+      margin: auto;
+      border: none;
+      border-radius: 28px;
+      background-color: var(--md-sys-color-surface-variant);
+      color: var(--md-sys-color-on-background);
+      padding: 24px;
+      width: calc(100% - 48px);
+      max-width: 400px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    dialog::backdrop {
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    dialog h3 {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .input-group input {
+      background: transparent;
+      border: 1.5px solid var(--md-sys-color-outline);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--md-sys-color-on-background);
+      outline: none;
+    }
+
+    .input-group input:focus {
+      border-color: var(--md-sys-color-primary);
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .dialog-actions button {
+      background: none;
+      border: none;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--md-sys-color-primary);
+    }
+
+    .dialog-actions button.btn-delete {
+      color: var(--md-sys-color-error);
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Discord Shortcuts</header>
+
+  <main id="channelList"></main>
+
+  <button class="fab" id="openAddDialog">
+    <span class="material-symbols-outlined">add</span>
+  </button>
+
+  <!-- 追加/編集ダイアログ -->
+  <dialog id="editDialog">
+    <h3 id="dialogTitle">チャンネルを追加</h3>
+    <div class="input-group">
+      <input type="text" id="inputTitle" placeholder="表示名 (例: 雑談部屋)">
+      <input type="url" id="inputUrl" placeholder="URL (例: https://discord.com/channels/...)">
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-delete" id="btnDelete" style="display: none;">削除</button>
+      <button id="btnCancel">キャンセル</button>
+      <button id="btnSave">保存</button>
+    </div>
+  </dialog>
+
+  <script>
+    const STORAGE_KEY = 'discord_shortcuts_data';
+    let channels = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let currentEditId = null;
+
+    function saveChannels() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(channels));
+      render();
+    }
+
+    const listContainer = document.getElementById('channelList');
+    const dialog = document.getElementById('editDialog');
+    const inputTitle = document.getElementById('inputTitle');
+    const inputUrl = document.getElementById('inputUrl');
+    const btnDelete = document.getElementById('btnDelete');
+
+    function render() {
+      listContainer.innerHTML = '';
+      channels.forEach(ch => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-info">
+            <div class="card-title">${escapeHtml(ch.title)}</div>
+            <div class="card-url">${escapeHtml(ch.url)}</div>
+          </div>
+          <button class="btn-icon" data-id="${ch.id}">
+            <span class="material-symbols-outlined">edit</span>
+          </button>
+        `;
+
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-icon')) return;
+          window.location.href = ch.url;
+        });
+
+        card.querySelector('.btn-icon').addEventListener('click', (e) => {
+          e.stopPropagation();
+          openDialog(ch);
+        });
+
+        listContainer.appendChild(card);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    function openDialog(item = null) {
+      currentEditId = item ? item.id : null;
+      document.getElementById('dialogTitle').textContent = item ? 'チャンネルを編集' : 'チャンネルを追加';
+      inputTitle.value = item ? item.title : '';
+      inputUrl.value = item ? item.url : '';
+      btnDelete.style.display = item ? 'inline-block' : 'none';
+      dialog.showModal();
+    }
+
+    document.getElementById('openAddDialog').addEventListener('click', () => openDialog());
+    document.getElementById('btnCancel').addEventListener('click', () => dialog.close());
+
+    document.getElementById('btnSave').addEventListener('click', () => {
+      const title = inputTitle.value.trim();
+      const url = inputUrl.value.trim();
+      if (!title || !url) return;
+
+      if (currentEditId) {
+        channels = channels.map(c => c.id === currentEditId ? { ...c, title, url } : c);
+      } else {
+        channels.push({ id: Date.now().toString(), title, url });
+      }
+      saveChannels();
+      dialog.close();
+    });
+
+    btnDelete.addEventListener('click', () => {
+      if (currentEditId) {
+        channels = channels.filter(c => c.id !== currentEditId);
+        saveChannels();
+        dialog.close();
+      }
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+
+    render();
+  </script>
+</body>
+</html>
