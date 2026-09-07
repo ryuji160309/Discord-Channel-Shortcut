@@ -2,7 +2,6 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <!-- 拡大縮小の完全無効化 & キーボード被り防止 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
   <title>Discord Shortcuts</title>
   <link rel="manifest" href="manifest.json">
@@ -76,7 +75,6 @@
       z-index: 10;
     }
 
-    /* Fold開閉対応：画面幅600px以上で2列グリッド化 */
     main {
       flex: 1;
       padding: 8px 16px 96px;
@@ -96,7 +94,6 @@
       }
     }
 
-    /* カードデザイン（URL非表示・表示名強調） */
     .card {
       background-color: var(--md-sys-color-surface-container);
       border-radius: 16px;
@@ -106,7 +103,6 @@
       justify-content: space-between;
       cursor: pointer;
       position: relative;
-      /* 位置移動時のFLIPアニメーション */
       transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, opacity 0.2s ease;
     }
 
@@ -115,7 +111,6 @@
       background-color: var(--md-sys-color-surface-container-high);
     }
 
-    /* ドラッグ中アイテム（指に追従） */
     .card.dragging {
       opacity: 0.95;
       box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4);
@@ -123,13 +118,10 @@
       background-color: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-on-primary-container);
       pointer-events: none;
-      transition: none; /* 指の動きには即時追従 */
+      transition: none;
     }
 
-    .card.dragging .card-title {
-      color: var(--md-sys-color-on-primary-container);
-    }
-
+    .card.dragging .card-title,
     .card.dragging .btn-more {
       color: var(--md-sys-color-on-primary-container);
     }
@@ -294,7 +286,6 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(channels));
     }
 
-    // --- FLIPアニメーション付き描画（パキッと瞬間移動させない処理） ---
     function render(animate = false) {
       const firstRects = new Map();
       if (animate) {
@@ -357,7 +348,6 @@
       }[tag] || tag));
     }
 
-    // --- 指に完全追従し、周囲が滑らかに避ける長押しドラッグ制御 ---
     function attachDragEvents(element) {
       let timer = null;
       let isDragging = false;
@@ -401,7 +391,6 @@
         const deltaY = touch.clientY - startY;
         element.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.03)`;
 
-        // ドラッグ先要素の検知と滑らかな位置交換
         const fromIndex = channels.findIndex(c => c.id === element.dataset.id);
         const siblings = [...listContainer.querySelectorAll('.card:not(.dragging)')];
         
@@ -414,7 +403,7 @@
               const moved = channels.splice(fromIndex, 1)[0];
               channels.splice(toIndex, 0, moved);
               saveChannels();
-              render(true); // 他の要素をアニメーション移動
+              render(true);
               break;
             }
           }
@@ -479,14 +468,12 @@
       }
     });
 
-    // --- Service Worker 登録 & 更新監視（爆速起動を維持しつつ自動更新） ---
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').then(reg => {
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // 新バージョンがあれば即時反映してリロード
               newWorker.postMessage({ action: 'skipWaiting' });
             }
           });

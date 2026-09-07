@@ -1,4 +1,4 @@
-const CACHE_NAME = 'discord-shortcuts-v2';
+const CACHE_NAME = 'discord-shortcuts-v2.1';
 const ASSETS = [
   './',
   './index.html',
@@ -23,14 +23,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 即座に新バージョンへ切り替えるメッセージハンドラ
 self.addEventListener('message', (event) => {
   if (event.data && event.data.action === 'skipWaiting') {
     self.skipWaiting();
   }
 });
 
-// Stale-While-Revalidate: キャッシュから超爆速で返しつつ、裏で最新を取得・更新
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
