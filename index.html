@@ -1,49 +1,508 @@
-const CACHE_NAME = 'discord-shortcuts-v2';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap',
-  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0'
-];
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- 拡大縮小の完全無効化 & キーボード被り防止 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+  <title>Discord Shortcuts</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#141218" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FEF7FF" media="(prefers-color-scheme: light)">
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
-});
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      )
-    )
-  );
-});
+  <style>
+    :root {
+      --md-sys-color-background: #FEF7FF;
+      --md-sys-color-on-background: #1D1B20;
+      --md-sys-color-surface: #FEF7FF;
+      --md-sys-color-surface-container: #F3EDF7;
+      --md-sys-color-surface-container-high: #ECE6F0;
+      --md-sys-color-on-surface: #1D1B20;
+      --md-sys-color-on-surface-variant: #49454F;
+      --md-sys-color-primary: #65558F;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #E8DEF8;
+      --md-sys-color-on-primary-container: #210F47;
+      --md-sys-color-outline: #79747E;
+      --md-sys-color-error: #BA1A1A;
+    }
 
-// 即座に新バージョンへ切り替えるメッセージハンドラ
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.action === 'skipWaiting') {
-    self.skipWaiting();
-  }
-});
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --md-sys-color-background: #141218;
+        --md-sys-color-on-background: #E6E0E9;
+        --md-sys-color-surface: #141218;
+        --md-sys-color-surface-container: #211F26;
+        --md-sys-color-surface-container-high: #2B2930;
+        --md-sys-color-on-surface: #E6E0E9;
+        --md-sys-color-on-surface-variant: #CAC4D0;
+        --md-sys-color-primary: #D0BCFF;
+        --md-sys-color-on-primary: #381E72;
+        --md-sys-color-primary-container: #4F378B;
+        --md-sys-color-on-primary-container: #EADDFF;
+        --md-sys-color-outline: #938F99;
+        --md-sys-color-error: #FFB4AB;
+      }
+    }
 
-// Stale-While-Revalidate: キャッシュから超爆速で返しつつ、裏で最新を取得・更新
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.match(event.request).then((cachedResponse) => {
-        const fetchPromise = fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            cache.put(event.request, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch(() => cachedResponse);
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: pan-y;
+    }
 
-        return cachedResponse || fetchPromise;
+    body {
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-background);
+      font-family: 'Roboto', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 16px 24px;
+      font-size: 22px;
+      font-weight: 500;
+      background-color: var(--md-sys-color-surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    /* Fold開閉対応：画面幅600px以上で2列グリッド化 */
+    main {
+      flex: 1;
+      padding: 8px 16px 96px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 600px) {
+      main {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 16px 24px 96px;
+        gap: 16px;
+      }
+    }
+
+    /* カードデザイン（URL非表示・表示名強調） */
+    .card {
+      background-color: var(--md-sys-color-surface-container);
+      border-radius: 16px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      position: relative;
+      /* 位置移動時のFLIPアニメーション */
+      transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    .card:active:not(.dragging) {
+      transform: scale(0.98);
+      background-color: var(--md-sys-color-surface-container-high);
+    }
+
+    /* ドラッグ中アイテム（指に追従） */
+    .card.dragging {
+      opacity: 0.95;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      pointer-events: none;
+      transition: none; /* 指の動きには即時追従 */
+    }
+
+    .card.dragging .card-title {
+      color: var(--md-sys-color-on-primary-container);
+    }
+
+    .card.dragging .btn-more {
+      color: var(--md-sys-color-on-primary-container);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      padding-right: 12px;
+    }
+
+    .btn-more {
+      background: none;
+      border: none;
+      color: var(--md-sys-color-on-surface-variant);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .btn-more:active {
+      background-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .fab {
+      position: fixed;
+      right: 20px;
+      bottom: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 50;
+    }
+
+    .fab:active {
+      transform: scale(0.92);
+    }
+
+    dialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0;
+      border: none;
+      border-radius: 28px;
+      background-color: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-on-surface);
+      padding: 24px;
+      width: calc(100% - 48px);
+      max-width: 400px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    dialog::backdrop {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    dialog h3 {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .input-group input {
+      background: transparent;
+      border: 1.5px solid var(--md-sys-color-outline);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      color: var(--md-sys-color-on-surface);
+      outline: none;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .input-group input:focus {
+      border-color: var(--md-sys-color-primary);
+      border-width: 2px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .dialog-actions button {
+      background: none;
+      border: none;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--md-sys-color-primary);
+    }
+
+    .dialog-actions button.btn-delete {
+      color: var(--md-sys-color-error);
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Discord Shortcuts</header>
+
+  <main id="channelList"></main>
+
+  <button class="fab" id="openAddDialog" aria-label="追加">
+    <span class="material-symbols-outlined">add</span>
+  </button>
+
+  <dialog id="editDialog">
+    <h3 id="dialogTitle">チャンネルを追加</h3>
+    <div class="input-group">
+      <input type="text" id="inputTitle" placeholder="表示名 (例: 雑談部屋)" autocomplete="off">
+      <input type="url" id="inputUrl" placeholder="リンク (例: https://discord.com/...)" autocomplete="off">
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-delete" id="btnDelete" style="display: none;">削除</button>
+      <button id="btnCancel">キャンセル</button>
+      <button id="btnSave">保存</button>
+    </div>
+  </dialog>
+
+  <script>
+    const STORAGE_KEY = 'discord_shortcuts_data';
+    let channels = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let currentEditId = null;
+
+    const listContainer = document.getElementById('channelList');
+    const dialog = document.getElementById('editDialog');
+    const inputTitle = document.getElementById('inputTitle');
+    const inputUrl = document.getElementById('inputUrl');
+    const btnDelete = document.getElementById('btnDelete');
+
+    function saveChannels() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(channels));
+    }
+
+    // --- FLIPアニメーション付き描画（パキッと瞬間移動させない処理） ---
+    function render(animate = false) {
+      const firstRects = new Map();
+      if (animate) {
+        listContainer.querySelectorAll('.card').forEach(el => {
+          firstRects.set(el.dataset.id, el.getBoundingClientRect());
+        });
+      }
+
+      listContainer.innerHTML = '';
+      channels.forEach((ch, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.id = ch.id;
+        card.dataset.index = index;
+
+        card.innerHTML = `
+          <div class="card-title">${escapeHtml(ch.title)}</div>
+          <button class="btn-more" data-id="${ch.id}" aria-label="操作メニュー">
+            <span class="material-symbols-outlined">more_vert</span>
+          </button>
+        `;
+
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-more') || card.classList.contains('was-dragging')) return;
+          window.location.href = ch.url;
+        });
+
+        card.querySelector('.btn-more').addEventListener('click', (e) => {
+          e.stopPropagation();
+          openDialog(ch);
+        });
+
+        attachDragEvents(card);
+        listContainer.appendChild(card);
       });
-    })
-  );
-});
+
+      if (animate) {
+        listContainer.querySelectorAll('.card').forEach(el => {
+          const first = firstRects.get(el.dataset.id);
+          if (first) {
+            const last = el.getBoundingClientRect();
+            const invertX = first.left - last.left;
+            const invertY = first.top - last.top;
+            if (invertX !== 0 || invertY !== 0) {
+              el.style.transform = `translate(${invertX}px, ${invertY}px)`;
+              el.style.transition = 'none';
+              requestAnimationFrame(() => {
+                el.style.transition = 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)';
+                el.style.transform = '';
+              });
+            }
+          }
+        });
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    // --- 指に完全追従し、周囲が滑らかに避ける長押しドラッグ制御 ---
+    function attachDragEvents(element) {
+      let timer = null;
+      let isDragging = false;
+      let startX = 0, startY = 0;
+      let initLeft = 0, initTop = 0;
+
+      const onTouchStart = (e) => {
+        if (e.target.closest('.btn-more')) return;
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+
+        timer = setTimeout(() => {
+          isDragging = true;
+          if (navigator.vibrate) navigator.vibrate(40);
+
+          const rect = element.getBoundingClientRect();
+          initLeft = rect.left;
+          initTop = rect.top;
+
+          element.classList.add('dragging');
+          element.style.position = 'fixed';
+          element.style.left = `${initLeft}px`;
+          element.style.top = `${initTop}px`;
+          element.style.width = `${rect.width}px`;
+          element.style.height = `${rect.height}px`;
+        }, 300);
+      };
+
+      const onTouchMove = (e) => {
+        const touch = e.touches[0];
+        if (!isDragging) {
+          if (Math.hypot(touch.clientX - startX, touch.clientY - startY) > 8) {
+            clearTimeout(timer);
+          }
+          return;
+        }
+
+        e.preventDefault();
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+        element.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(1.03)`;
+
+        // ドラッグ先要素の検知と滑らかな位置交換
+        const fromIndex = channels.findIndex(c => c.id === element.dataset.id);
+        const siblings = [...listContainer.querySelectorAll('.card:not(.dragging)')];
+        
+        for (const sib of siblings) {
+          const rect = sib.getBoundingClientRect();
+          if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+              touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+            const toIndex = channels.findIndex(c => c.id === sib.dataset.id);
+            if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+              const moved = channels.splice(fromIndex, 1)[0];
+              channels.splice(toIndex, 0, moved);
+              saveChannels();
+              render(true); // 他の要素をアニメーション移動
+              break;
+            }
+          }
+        }
+      };
+
+      const onTouchEnd = () => {
+        clearTimeout(timer);
+        if (isDragging) {
+          isDragging = false;
+          element.classList.remove('dragging');
+          element.classList.add('was-dragging');
+          setTimeout(() => element.classList.remove('was-dragging'), 100);
+          render(false);
+        }
+      };
+
+      element.addEventListener('touchstart', onTouchStart, { passive: true });
+      element.addEventListener('touchmove', onTouchMove, { passive: false });
+      element.addEventListener('touchend', onTouchEnd);
+      element.addEventListener('touchcancel', onTouchEnd);
+    }
+
+    function openDialog(item = null) {
+      currentEditId = item ? item.id : null;
+      document.getElementById('dialogTitle').textContent = item ? 'チャンネルを編集' : 'チャンネルを追加';
+      inputTitle.value = item ? item.title : '';
+      inputUrl.value = item ? item.url : '';
+      btnDelete.style.display = item ? 'inline-block' : 'none';
+      dialog.showModal();
+
+      setTimeout(() => {
+        inputTitle.focus();
+        inputTitle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    }
+
+    document.getElementById('openAddDialog').addEventListener('click', () => openDialog());
+    document.getElementById('btnCancel').addEventListener('click', () => dialog.close());
+
+    document.getElementById('btnSave').addEventListener('click', () => {
+      const title = inputTitle.value.trim();
+      const url = inputUrl.value.trim();
+      if (!title || !url) return;
+
+      if (currentEditId) {
+        channels = channels.map(c => c.id === currentEditId ? { ...c, title, url } : c);
+      } else {
+        channels.push({ id: Date.now().toString(), title, url });
+      }
+      saveChannels();
+      dialog.close();
+      render(true);
+    });
+
+    btnDelete.addEventListener('click', () => {
+      if (currentEditId) {
+        channels = channels.filter(c => c.id !== currentEditId);
+        saveChannels();
+        dialog.close();
+        render(true);
+      }
+    });
+
+    // --- Service Worker 登録 & 更新監視（爆速起動を維持しつつ自動更新） ---
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // 新バージョンがあれば即時反映してリロード
+              newWorker.postMessage({ action: 'skipWaiting' });
+            }
+          });
+        });
+      });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }
+
+    render(false);
+  </script>
+</body>
+</html>
