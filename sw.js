@@ -1,4 +1,4 @@
-const CACHE_NAME = 'discord-shortcuts-v2.2';
+const CACHE_NAME = 'discord-shortcuts-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -7,41 +7,40 @@ const ASSETS = [
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0'
 ];
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
+self.addEventListener('install', (e) => {
+  self.skipWaiting();
+  e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      )
-    )
+      Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)))
+    ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.action === 'skipWaiting') {
-    self.skipWaiting();
-  }
-});
+// Stale-While-Revalidate 戦略 (即時起動 + バックグラウンドで最新に更新)
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((cachedResponse) => {
+      const fetchPromise = fetch(e.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const resClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
+        }
+        return networkResponse;
+      }).catch(() => {});
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.match(event.request).then((cachedResponse) => {
-        const fetchPromise = fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            cache.put(event.request, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch(() => cachedResponse);
-
-        return cachedResponse || fetchPromise;
-      });
+      return cachedResponse || fetchPromise;
     })
   );
+});
+
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
