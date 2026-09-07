@@ -94,17 +94,18 @@
       }
     }
 
-    .card {
-      background-color: var(--md-sys-color-surface-container);
-      border-radius: 16px;
-      padding: 18px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, opacity 0.2s ease;
-    }
+/* カードデザイン */
+.card {
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: 16px;
+  padding: 16px; /* 元の縦幅 (上下16px, 左右16px) に戻しました */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+}
 
     .card:active:not(.dragging) {
       transform: scale(0.98);
